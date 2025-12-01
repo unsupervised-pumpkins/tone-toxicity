@@ -1,4 +1,4 @@
 Youtube_Scrape.py
 data/audio_raw/
 data/audio_segments/
-text_model.py
+models/*/model.safetensors
