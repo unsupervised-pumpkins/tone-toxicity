@@ -106,8 +106,12 @@ INPUT_FILES = [
 
 def label_file(input_path: Path, output_path: Path, max_examples=None):
     print(f"[INFO] Labelling {input_path} -> {output_path}")
+
+    with input_path.open() as f:
+        total = sum(1 for _ in f)
+
     with input_path.open() as f_in, output_path.open("w") as f_out:
-        for i, line in enumerate(tqdm(f_in)):
+        for i, line in enumerate(tqdm(f_in, total=total, desc=input_path.name)):
             line = line.strip()
             if not line:
                 continue
