@@ -8,8 +8,9 @@ This project develops a multimodal deep learning network that quantifies toxicit
 Labels are created using LLM-assisted generation of weak/noisy labels. Each segment receives an output containing the predicted toxicity score. These weak labels will then be refined manually to create a smaller, high-quality evaluation set for our true labels. The model uses a shared transformer encoder (**RoBERTa** or **DeBERTa**) for text representation. First, we build a text-only baseline model, and then add audio and video features.
 
 ### Models Compared
-- **Model A (Text-only)**
-- **Model B (Text+Audio)**
+- **Model T (Text-only)**
+- **Model A (Audio-only)**
+- **Model TA (Text+Audio, multimodal)**
 
 ### Evaluation Focus
 We will measure how the predicted toxicity score changes as additional features are introduced. Metrics include:
