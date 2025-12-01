@@ -5,6 +5,8 @@ from pathlib import Path
 from tqdm import tqdm
 from transformers import pipeline
 
+import sys
+
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 
 pipe = pipeline(
@@ -107,6 +109,7 @@ INPUT_FILES = [
 def label_file(input_path: Path, output_path: Path, max_examples=None):
     print(f"[INFO] Labelling {input_path} -> {output_path}")
 
+    # Count total lines so tqdm can show "XX/total"
     with input_path.open() as f:
         total = sum(1 for _ in f)
 
@@ -136,11 +139,30 @@ def label_file(input_path: Path, output_path: Path, max_examples=None):
                 break
 
 
+
 def main():
-    for in_path in INPUT_FILES:
+    # If user passes a filename, only process that file
+    if len(sys.argv) > 1:
+        arg = Path(sys.argv[1])
+
+        # If they passed a bare name like "ben_shapiro.jsonl",
+        # look for it under DATA_DIR.
+        if not arg.is_absolute() and not arg.exists():
+            in_path = DATA_DIR / arg.name
+        else:
+            in_path = arg
+
+        if not in_path.exists():
+            raise FileNotFoundError(f"Input file not found: {in_path}")
+
         out_path = in_path.with_name(in_path.stem + "_labeled.jsonl")
-        # label_file(in_path, out_path, max_examples=2)
         label_file(in_path, out_path)
+    else:
+        # Fallback: original behavior – run all three files
+        for in_path in INPUT_FILES:
+            out_path = in_path.with_name(in_path.stem + "_labeled.jsonl")
+            label_file(in_path, out_path)
+
 
 
 if __name__ == "__main__":
