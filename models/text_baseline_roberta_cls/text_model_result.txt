@@ -1,0 +1,15 @@
+MODEL_NAME = "roberta-base"
+BATCH_SIZE = 64
+MAX_LENGTH = 256
+EPOCHS = 7
+LEARNING_RATE = 2e-5
+NUM_CLASSES = 5
+
+Epoch 1/7 | training loss =1.4840, training accuracy =0.2910 | validation loss=1.3120, validation accuracy=0.4358
+Epoch 2/7 | training loss =1.1478, training accuracy =0.5074 | validation loss=1.0928, validation accuracy=0.5413
+Epoch 3/7 | training loss =0.9237, training accuracy =0.6071 | validation loss=1.0574, validation accuracy=0.5550
+Epoch 4/7 | training loss =0.7299, training accuracy =0.6982 | validation loss=1.1044, validation accuracy=0.5780
+Epoch 5/7 | training loss =0.6013, training accuracy =0.7577 | validation loss=1.1605, validation accuracy=0.5963
+Epoch 6/7 | training loss =0.4103, training accuracy =0.8471 | validation loss=1.2899, validation accuracy=0.5826
+Epoch 7/7 | training loss =0.3601, training accuracy =0.8683 | validation loss=1.3436, validation accuracy=0.6101
+Smodel Path: models/text_baseline_roberta_cls

@@ -6,9 +6,9 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 MODEL_NAME = "roberta-base"
-BATCH_SIZE = 8
+BATCH_SIZE = 64
 MAX_LENGTH = 256
-EPOCHS = 3
+EPOCHS = 200
 LEARNING_RATE = 2e-5
 NUM_CLASSES = 5
 
