@@ -36,11 +36,12 @@ Feed LLM output into an off-the-shelf toxicity scorer.
 Evaluation will focus on how the predicted toxicity score changes as additional features are introduced. Metrics include MAE against true labels, mean absolute score shift between models, and correlation across modalities.
 
 **Audio branch:** Introduce features such as pitch, energy, and tempo, or combine into embeddings.  
-**Combined/fused model:** Training will begin with Model A (text-only), with the addition of audio features for Model B while maintaining fixed hyperparameters to isolate effects.
+**Combined/fused model:** Training will begin with Model T (text-only), Model A (audio-only) and combining text and audio features for Model TA while maintaining fixed hyperparameters to isolate effects if possible. In the event where VRAM is out of memory for Model TA, we would go back to Model T and Model A to match hyperparameters from Model TA (e.g. Batch Size). This would ensure we are isolating effects as much as possible.
 
-**Train and compare the two models:**
-- Model A (Text-only)  
-- Model B (Text+Audio)
+**Train and compare the three models:**
+- Model T (Text-only)  
+- Model A (Audio-only)
+- Model TA (Text+Audio)
 
 ---
 
