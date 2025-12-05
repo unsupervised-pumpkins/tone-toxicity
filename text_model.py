@@ -12,6 +12,14 @@ EPOCHS = 200
 LEARNING_RATE = 2e-5
 NUM_CLASSES = 5
 
+BIN_MIDPOINTS = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
+
+def logits_to_continuous(logits: torch.Tensor) -> torch.Tensor:
+    probs = torch.softmax(logits, dim=-1)
+    mids = BIN_MIDPOINTS.to(probs.device)
+    return (probs * mids).sum(dim=-1)
+
+
 def bin_toxicity(score: float) -> int:
 
     if score < 0.2:
@@ -65,7 +73,9 @@ class ToxicityTextDataset(Dataset):
             "input_ids": enc["input_ids"].squeeze(0),
             "attention_mask": enc["attention_mask"].squeeze(0),
             "labels": torch.tensor(label_id, dtype=torch.long),
+            "toxicity": torch.tensor(tox_score, dtype=torch.float),  # NEW
         }
+
 
 def make_dataloaders():
     data_root = Path("data") / "segments_text" / "splits"
@@ -101,6 +111,7 @@ def evaluate(model, dataloader, device, loss_fn):
     total_loss = 0.0
     n_examples = 0
     n_correct = 0
+    total_abs_err = 0.0
 
     with torch.no_grad():
         for batch in dataloader:
@@ -112,9 +123,14 @@ def evaluate(model, dataloader, device, loss_fn):
             preds = torch.argmax(logits, dim=-1)
             n_correct += (preds == labels).sum().item()
 
+            pred_scores = logits_to_continuous(logits)
+            true_scores = batch["toxicity"].to(device)
+            total_abs_err += torch.abs(pred_scores - true_scores).sum().item()
+
     avg_loss = total_loss / max(1, n_examples)
     accuracy = n_correct / max(1, n_examples)
-    return avg_loss, accuracy
+    mae = total_abs_err / max(1, n_examples)
+    return avg_loss, accuracy, mae
 
 
 def main():
@@ -153,12 +169,14 @@ def main():
 
         avg_train_loss = total_train_loss / max(1, n_train_examples)
         train_acc = n_train_correct / max(1, n_train_examples)
-        val_loss, val_acc = evaluate(model, val_dl, device, loss_fn)
+        # val_loss, val_acc = evaluate(model, val_dl, device, loss_fn)
+        val_loss, val_acc, val_mae = evaluate(model, val_dl, device, loss_fn)
 
         print(
-            f"Epoch {epoch+1}/{EPOCHS} | "
-            f"training loss ={avg_train_loss:.4f}, training accuracy ={train_acc:.4f} | "
-            f"validation loss={val_loss:.4f}, validation accuracy={val_acc:.4f}"
+            f"Epoch {epoch + 1}/{EPOCHS} | "
+            f"training loss={avg_train_loss:.4f}, training accuracy={train_acc:.4f} | "
+            f"validation loss={val_loss:.4f}, validation accuracy={val_acc:.4f}, "
+            f"validation mae={val_mae:.4f}"
         )
 
     out_dir = Path("models") / "text_baseline_roberta_cls"

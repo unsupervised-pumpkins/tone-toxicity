@@ -3,3 +3,4 @@ data/audio_raw/
 data/audio_segments/
 models/*/model.safetensors
 audio_model_first_hack.py
+data.zip
