@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 import torch
 from torch import nn
@@ -15,7 +16,7 @@ NUM_CLASSES = 5 # not tunable
 SAMPLE_RATE = 16_000 # not tunable
 MAX_DURATION = 15.00
 BATCH_SIZE = 32
-EPOCHS = 7
+EPOCHS = 4
 LEARNING_RATE = 2e-5
 
 
@@ -26,12 +27,6 @@ def logits_to_continuous(logits: torch.Tensor) -> torch.Tensor:
     mids = BIN_MIDPOINTS.to(probs.device)
     return (probs * mids).sum(dim=-1)
 
-import matplotlib.pyplot as plt
-
-BIN_CENTERS = [0.1, 0.3, 0.5, 0.7, 0.9]
-
-def class_to_score(class_id: int) -> float:
-    return BIN_CENTERS[class_id]
 
 def plot_curves(history, out_dir: Path, prefix: str):
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -193,16 +188,17 @@ def make_dataloaders():
 
 
 def forward_step(model, batch, device, loss_fn):
-
     input_values = batch["input_values"].to(device)
     attention_mask = batch["attention_mask"].to(device)
     labels = batch["labels"].to(device)
+
     outputs = model(
         input_values=input_values,
         attention_mask=attention_mask,
+        labels=labels,
     )
     logits = outputs.logits
-    loss = loss_fn(logits, labels)
+    loss = outputs.loss
     return loss, logits, labels
 
 
@@ -226,22 +222,15 @@ def evaluate(model, dataloader, device, loss_fn):
             preds = torch.argmax(logits, dim=-1)
             n_correct += (preds == labels).sum().item()
 
-
             true_scores = batch["toxicity_score"].to(device)
-            pred_scores = torch.tensor(
-                [class_to_score(int(c)) for c in preds.cpu().tolist()],
-                device=device,
-                dtype=torch.float,
-            )
-
+            pred_scores = logits_to_continuous(logits)
             total_abs_err += torch.abs(pred_scores - true_scores).sum().item()
 
     avg_loss = total_loss / max(1, n_examples)
     accuracy = n_correct / max(1, n_examples)
-
     val_mae = total_abs_err / max(1, n_examples)
-    return avg_loss, accuracy, val_mae
 
+    return avg_loss, accuracy, val_mae
 
 
 def main():

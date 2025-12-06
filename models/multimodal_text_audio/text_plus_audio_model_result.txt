@@ -1,0 +1,15 @@
+TEXT_MODEL_NAME = "roberta-base"
+AUDIO_MODEL_NAME = "facebook/wav2vec2-base"
+NUM_CLASSES = 5
+SAMPLE_RATE = 16_000
+MAX_DURATION = 15.0
+BATCH_SIZE = 32
+EPOCHS = 4
+LEARNING_RATE = 2e-5
+MAX_TEXT_LENGTH = 256
+
+Epoch 1/4 | train loss=1.3370, acc=0.3922 | val loss=1.0652, acc=0.5492, val MAE=0.1383
+Epoch 2/4 | train loss=0.9844, acc=0.5641 | val loss=0.9061, acc=0.6425, val MAE=0.1154
+Epoch 3/4 | train loss=0.7363, acc=0.6816 | val loss=0.9032, acc=0.6477, val MAE=0.1235
+Epoch 4/4 | train loss=0.5412, acc=0.7786 | val loss=0.9408, acc=0.6632, val MAE=0.1108
+Smodel Path: models/multimodal_text_audio
