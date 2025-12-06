@@ -10,14 +10,15 @@ from transformers import (
     AutoModel,
 )
 
+
 TEXT_MODEL_NAME = "roberta-base"
 AUDIO_MODEL_NAME = "facebook/wav2vec2-base"
 NUM_CLASSES = 5
 SAMPLE_RATE = 16_000
 MAX_DURATION = 15.0
-BATCH_SIZE = 4
-EPOCHS = 3
-LEARNING_RATE = 1e-4
+BATCH_SIZE = 32
+EPOCHS = 7
+LEARNING_RATE = 2e-5
 MAX_TEXT_LENGTH = 256
 
 BIN_MIDPOINTS = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
@@ -272,6 +273,18 @@ def evaluate(model, dataloader, device, loss_fn):
     return avg_loss, accuracy, mae
 
 def main():
+    import random
+    import numpy as np
+    import torch
+
+    def set_seed(seed=0):
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    set_seed(42)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 

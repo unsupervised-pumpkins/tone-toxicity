@@ -6,9 +6,9 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 MODEL_NAME = "roberta-base"
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 MAX_LENGTH = 256
-EPOCHS = 200
+EPOCHS = 7
 LEARNING_RATE = 2e-5
 NUM_CLASSES = 5
 
@@ -134,6 +134,18 @@ def evaluate(model, dataloader, device, loss_fn):
 
 
 def main():
+    import random
+    import numpy as np
+    import torch
+
+    def set_seed(seed=0):
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    set_seed(42)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 

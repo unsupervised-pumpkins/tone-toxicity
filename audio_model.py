@@ -11,12 +11,12 @@ from transformers import (
 )
 
 MODEL_NAME = "facebook/wav2vec2-base"
-NUM_CLASSES = 5
-SAMPLE_RATE = 16_000
-MAX_DURATION = 1.0 #15.0
-BATCH_SIZE = 2 #4
-EPOCHS = 2 #3
-LEARNING_RATE = 0.1 #1e-4
+NUM_CLASSES = 5 # not tunable
+SAMPLE_RATE = 16_000 # not tunable
+MAX_DURATION = 15.00
+BATCH_SIZE = 32
+EPOCHS = 7
+LEARNING_RATE = 2e-5
 
 BIN_MIDPOINTS = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
 
@@ -203,6 +203,25 @@ def evaluate(model, dataloader, device, loss_fn):
     return avg_loss, accuracy, mae
 
 def main():
+
+    import os
+    import random
+    import numpy as np
+    import torch
+
+    def set_seed(seed=0):
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    set_seed(42)
+
+    print("HYPERS:", MAX_DURATION, BATCH_SIZE, EPOCHS, LEARNING_RATE)
+    print("torch.initial_seed():", torch.initial_seed())
+    print("python random:", random.random())
+    print("numpy random:", np.random.rand())
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 
