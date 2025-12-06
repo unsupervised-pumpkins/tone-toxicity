@@ -1,0 +1,12 @@
+MODEL_NAME = "facebook/wav2vec2-base"
+NUM_CLASSES = 5 # not tunable
+SAMPLE_RATE = 16_000 # not tunable
+MAX_DURATION = 15.00
+BATCH_SIZE = 32
+EPOCHS = 4
+LEARNING_RATE = 2e-5
+
+Epoch 1/4 | train loss=1.4682, acc=0.3074 | val loss=1.4203, acc=0.3368, val MAE=0.2052
+Epoch 2/4 | train loss=1.4137, acc=0.3314 | val loss=1.4135, acc=0.3109, val MAE=0.2052
+Epoch 3/4 | train loss=1.4024, acc=0.3498 | val loss=1.4070, acc=0.3290, val MAE=0.1925
+Epoch 4/4 | train loss=1.3734, acc=0.3686 | val loss=1.3965, acc=0.3523, val MAE=0.1984
