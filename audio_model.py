@@ -18,12 +18,43 @@ BATCH_SIZE = 32
 EPOCHS = 7
 LEARNING_RATE = 2e-5
 
+
 BIN_MIDPOINTS = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
 
 def logits_to_continuous(logits: torch.Tensor) -> torch.Tensor:
     probs = torch.softmax(logits, dim=-1)
     mids = BIN_MIDPOINTS.to(probs.device)
     return (probs * mids).sum(dim=-1)
+
+import matplotlib.pyplot as plt
+
+BIN_CENTERS = [0.1, 0.3, 0.5, 0.7, 0.9]
+
+def class_to_score(class_id: int) -> float:
+    return BIN_CENTERS[class_id]
+
+def plot_curves(history, out_dir: Path, prefix: str):
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    plt.figure()
+    plt.plot(history["train_loss"], label="train loss")
+    plt.plot(history["val_loss"], label="val loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(out_dir / f"{prefix}_loss_curve.png")
+    plt.close()
+
+    plt.figure()
+    plt.plot(history["val_mae"], label="val MAE")
+    plt.xlabel("epoch")
+    plt.ylabel("MAE")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(out_dir / f"{prefix}_val_mae_curve.png")
+    plt.close()
+
 
 def bin_toxicity(score: float) -> int:
 
@@ -133,7 +164,7 @@ class ToxicityAudioDataset(Dataset):
             "input_values": input_values,
             "attention_mask": attention_mask,
             "labels": torch.tensor(label_id, dtype=torch.long),
-            "toxicity": torch.tensor(tox_score, dtype=torch.float),
+            "toxicity_score": torch.tensor(tox_score, dtype=torch.float),
         }
 
 
@@ -180,7 +211,10 @@ def evaluate(model, dataloader, device, loss_fn):
     total_loss = 0.0
     n_examples = 0
     n_correct = 0
+
     total_abs_err = 0.0 # for mae
+
+
 
     with torch.no_grad():
         for batch in dataloader:
@@ -192,15 +226,23 @@ def evaluate(model, dataloader, device, loss_fn):
             preds = torch.argmax(logits, dim=-1)
             n_correct += (preds == labels).sum().item()
 
-            # compute MAE
-            pred_scores = logits_to_continuous(logits)
-            true_scores = batch["toxicity"].to(device)
+
+            true_scores = batch["toxicity_score"].to(device)
+            pred_scores = torch.tensor(
+                [class_to_score(int(c)) for c in preds.cpu().tolist()],
+                device=device,
+                dtype=torch.float,
+            )
+
             total_abs_err += torch.abs(pred_scores - true_scores).sum().item()
 
     avg_loss = total_loss / max(1, n_examples)
     accuracy = n_correct / max(1, n_examples)
-    mae = total_abs_err / max(1, n_examples)    # MAE
-    return avg_loss, accuracy, mae
+
+    val_mae = total_abs_err / max(1, n_examples)
+    return avg_loss, accuracy, val_mae
+
+
 
 def main():
 
@@ -235,6 +277,12 @@ def main():
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
     loss_fn = nn.CrossEntropyLoss()
 
+    history = {
+        "train_loss": [],
+        "val_loss": [],
+        "val_mae": [],
+    }
+
     for epoch in range(EPOCHS):
         model.train()
         total_train_loss = 0.0
@@ -256,25 +304,25 @@ def main():
 
         avg_train_loss = total_train_loss / max(1, n_train_examples)
         train_acc = n_train_correct / max(1, n_train_examples)
-
-        # val_loss, val_acc = evaluate(model, val_dl, device, loss_fn)
         val_loss, val_acc, val_mae = evaluate(model, val_dl, device, loss_fn)
 
-        # print(
-        #     f"Epoch {epoch+1}/{EPOCHS} | "
-        #     f"train loss={avg_train_loss:.4f}, acc={train_acc:.4f} | "
-        #     f"val loss={val_loss:.4f}, acc={val_acc:.4f}"
-        # )
+
+        history["train_loss"].append(avg_train_loss)
+        history["val_loss"].append(val_loss)
+        history["val_mae"].append(val_mae)
         print(
             f"Epoch {epoch+1}/{EPOCHS} | "
             f"train loss={avg_train_loss:.4f}, acc={train_acc:.4f} | "
-            f"val loss={val_loss:.4f}, acc={val_acc:.4f}, mae={val_mae:.4f}"
+            f"val loss={val_loss:.4f}, acc={val_acc:.4f}, val MAE={val_mae:.4f}"
         )
+
+
 
     out_dir = Path("models") / "audio_wav2vec2_cls"
     out_dir.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(out_dir)
     feature_extractor.save_pretrained(out_dir)
+    plot_curves(history, out_dir, prefix="audio")
     print(f"Smodel Path: {out_dir}")
 
 
