@@ -25,6 +25,8 @@ We will measure how the predicted toxicity score changes as additional features 
 ### Step 1 – Data Collection & Preprocessing
 Scrape short clips (10–45 seconds) from publicly available YouTube segments of Ben Shapiro, Joe Rogan, and Jon Stewart. Transcripts can be extracted using the YouTube API or Whisper.
 
+Download link to Source Video: https://www.dropbox.com/scl/fi/lxs3oawxtlevcy85cqqe6/data.zip?rlkey=lu6b4dzmtglhxhkgizp4tihle&st=jsobilct&dl=0
+
 ### Step 2 – Label Creation (Weak vs. Curated)
 Use an LLM (Phi-3-mini / Llama-3-Instruct / fine-tuned RoBERTa / DeBERTa) to build one output per observation.
 
